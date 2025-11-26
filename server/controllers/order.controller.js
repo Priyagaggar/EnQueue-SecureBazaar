@@ -20,9 +20,9 @@ export const createOrder = async (req, res, next) => {
             price: gig.price,
             sellerId: gig.userId,
             buyerId: req.userId,
+            status: "pending",
             isCompleted: false,
             payment_intent: "local_test",
-            status: "pending",
         });
 
         await newOrder.save();

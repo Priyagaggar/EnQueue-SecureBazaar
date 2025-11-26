@@ -23,14 +23,14 @@ const Orders = () => {
         } catch (err) {
             if (err.response.status === 404) {
                 const res = await newRequest.post(`/conversations/`, {
-                    to: currentUser.seller ? order.buyerId : order.sellerId,
+                    to: currentUser.isseller ? order.buyerId : order.sellerId,
                 });
                 navigate(`/message/${res.data.id}`);
             }
         }
     };
 
-    // ✅ STATUS UPDATE FUNCTION
+    // ✅ STATUS UPDATE
     const updateStatus = async (id, status) => {
         try {
             await newRequest.put(`/orders/status/${id}`, { status });
@@ -76,28 +76,69 @@ const Orders = () => {
 
                                 {/* ✅ STATUS COLUMN */}
                                 <td>
-                                    {order.status === "pending" && currentUser.seller ? (
+                                    {/* SELLER VIEW */}
+                                    {currentUser.seller ? (
                                         <>
-                                            <button
-                                                className="Buttons acceptBtn"
-                                                onClick={() => updateStatus(order._id, "accepted")}
-                                            >
-                                                Accept
-                                            </button>
-                                            <button
-                                                className="Buttons rejectBtn"
-                                                onClick={() => updateStatus(order._id, "rejected")}
-                                            >
-                                                Reject
-                                            </button>
+                                            {order.status === "pending" && (
+                                                <>
+                                                    <button
+                                                        className="Buttons acceptBtn"
+                                                        onClick={() =>
+                                                            updateStatus(order._id, "accepted")
+                                                        }
+                                                    >
+                                                        Accept
+                                                    </button>
+                                                    <button
+                                                        className="Buttons rejectBtn"
+                                                        onClick={() =>
+                                                            updateStatus(order._id, "rejected")
+                                                        }
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </>
+                                            )}
+
+                                            {order.status === "accepted" && (
+                                                <button
+                                                    className="Buttons completeBtn"
+                                                    onClick={() =>
+                                                        updateStatus(order._id, "completed")
+                                                    }
+                                                >
+                                                    Mark Completed
+                                                </button>
+                                            )}
+
+                                            {["rejected", "completed"].includes(order.status) && (
+                                                <span className={`status ${order.status}`}>
+                            {order.status.toUpperCase()}
+                          </span>
+                                            )}
                                         </>
                                     ) : (
-                                        <span className={`status ${order.status}`}>
-                        {order.status.toUpperCase()}
-                      </span>
+                                        <>
+                                            {/* CLIENT VIEW */}
+                                            <span className={`status ${order.status}`}>
+                          {order.status.toUpperCase()}
+                        </span>
+
+                                            {order.status === "completed" && (
+                                                <button
+                                                    className="Buttons"
+                                                    onClick={() =>
+                                                        navigate(`/review/${order.gigId}`)
+                                                    }
+                                                >
+                                                    Leave Review
+                                                </button>
+                                            )}
+                                        </>
                                     )}
                                 </td>
 
+                                {/* ✅ CONTACT COLUMN */}
                                 <td>
                                     <img
                                         className="orderContact"

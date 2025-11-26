@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
-dotenv.config({ path: "./.env" });
+
+dotenv.config({path: "./.env"});
 console.log("Loaded MONGO =", process.env.MONGO);
 import express from "express";
 import mongoose from "mongoose";
@@ -17,12 +18,12 @@ const app = express();
 console.log("Loaded MONGO =", process.env.MONGO);
 
 const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO);
-    console.log("Connected to MongoDB");
-  } catch (error) {
-    console.log(error);
-  }
+    try {
+        await mongoose.connect(process.env.MONGO);
+        console.log("Connected to MongoDB");
+    } catch (error) {
+        console.log(error);
+    }
 };
 
 //middlewares
@@ -51,15 +52,15 @@ app.use("/api/messages", messageRoute);
 // app.use("/api/reviews", reviewRoute);
 
 app.use((err, req, res, next) => {
-  const errorStatus = err.status || 500;
-  const errorMessage = err.message || "Something went wrong!";
+    const errorStatus = err.status || 500;
+    const errorMessage = err.message || "Something went wrong!";
 
-  return res.status(errorStatus).send(errorMessage);
+    return res.status(errorStatus).send(errorMessage);
 });
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  connectDB();
-  console.log("Started");
+    connectDB();
+    console.log("Started");
 });
