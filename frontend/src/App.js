@@ -18,6 +18,8 @@ import ScrollToTop from "./components/ScrollToTop";
 import Pay from "./pages/Pay";
 import Success from "./pages/Success";
 import useAutoLogout from "./utils/AutoLogout";
+import FaceVerification from "./pages/FaceVerification";
+
 
 function App() {
   useAutoLogout();
@@ -38,6 +40,7 @@ function App() {
 
   const router = createBrowserRouter([
     {
+
       path: "/",
       element: <Layout />,
       children: [
@@ -77,6 +80,11 @@ function App() {
           path: "/register",
           element: <Register />,
         },
+          {
+              path: "/verify-face",
+              element: <FaceVerification />,
+          },
+
         {
           path: "/login",
           element: <Login />,
@@ -94,6 +102,7 @@ function App() {
   ]);
 
   return <RouterProvider router={router} />;
+
 }
 
 export default App;

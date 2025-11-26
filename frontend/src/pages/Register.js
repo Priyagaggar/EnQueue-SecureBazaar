@@ -7,17 +7,25 @@ import { Link, useNavigate } from "react-router-dom";
 function Register() {
   const [errorMsg, setErrorMsg] = useState("");
   // const [file, setFile] = useState(null);
-  const [user, setUser] = useState({
-    username: "",
-    email: "",
-    password: "",
-    img: "",
-    country: "",
-    isSeller: false,
-    desc: "",
-  });
+    const [user, setUser] = useState({
+        username: "",
+        email: "",
+        password: "",
+        img: "",
+        country: "",
+        phone: "",
+        isSeller: false,
+        desc: "",
+    });
 
-  const navigate = useNavigate();
+
+    const isValidPassword = (password) => {
+        const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+        return strongPassword.test(password);
+    };
+
+
+    const navigate = useNavigate();
 
   const handleChange = (e) => {
     setUser((prev) => {
@@ -33,12 +41,21 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+      if (!isValidPassword(user.password)) {
+          alert("Password must be 8 characters, include one uppercase and one number");
+          return;
+      }
+
+      if (user.phone.length !== 10) {
+          alert("Phone number must be exactly 10 digits");
+          return;
+      }
+
     // const url = await upload(file);
     try {
-      await newRequest.post("/auth/register", {
-        ...user,
-      });
-      navigate("/");
+        await newRequest.post("/auth/register", { ...user });
+        navigate("/verify-face");
+
     } catch (err) {
       // Try to extract a readable message
       if (err.response && err.response.data && err.response.data.message) {
@@ -49,6 +66,9 @@ function Register() {
         setErrorMsg("Registration failed. Please check your input.");
       }
     }
+
+
+
   };
   return (
     <>
@@ -105,14 +125,22 @@ function Register() {
                 <span className="slider round"></span>
               </label>
             </div>
-            <label htmlFor="">Phone Number</label>
-            <input
-              name="phone"
-              type="text"
-              placeholder="+91 9876543210"
-              onChange={handleChange}
-            />
-            <label htmlFor="">Description</label>
+              <label>Phone Number</label>
+              <input
+                  name="phone"
+                  type="tel"
+                  maxLength="10"
+                  value={user.phone}
+                  onChange={(e) =>
+                      setUser((prev) => ({
+                          ...prev,
+                          phone: e.target.value.replace(/\D/g, ""),
+                      }))
+                  }
+                  placeholder="Enter 10 digit phone number"
+              />
+
+              <label htmlFor="">Description</label>
             <textarea
               placeholder="A short description of yourself"
               name="desc"

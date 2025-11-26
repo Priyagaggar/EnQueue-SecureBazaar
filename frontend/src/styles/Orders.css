@@ -45,3 +45,42 @@
     padding-left: 4px;
   }
 }
+
+.status.pending { color: orange; }
+.status.accepted { color: green; }
+.status.rejected { color: red; }
+.status.completed { color: blue; }
+.Buttons.danger {
+    background: #ff4d4d;
+    color: white;
+}
+
+.status {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.status.pending {
+    color: orange;
+}
+
+.status.accepted {
+    color: green;
+}
+
+.status.rejected {
+    color: red;
+}
+
+.acceptBtn {
+    background: #4CAF50;
+    color: white;
+    margin-right: 5px;
+}
+
+.rejectBtn {
+    background: #f44336;
+    color: white;
+}
+

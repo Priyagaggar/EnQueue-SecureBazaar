@@ -1,5 +1,7 @@
+import mongoose from "mongoose";
 import createError from "../utils/createError.js";
 import Conversation from "../models/conversation.model.js";
+import User from "../models/user.model.js";
 
 export const createConversation = async (req, res, next) => {
   const newConversation = new Conversation({
@@ -48,13 +50,41 @@ export const getSingleConversation = async (req, res, next) => {
   }
 };
 
-export const getConversations = async (req, res, next) => {
-  try {
-    const conversations = await Conversation.find(
-      req.isSeller ? { sellerId: req.userId } : { buyerId: req.userId }
-    ).sort({ updatedAt: -1 });
-    res.status(200).send(conversations);
-  } catch (err) {
-    next(err);
-  }
+export const getConversations = async (req, res) => {
+    try {
+        const conversations = await Conversation.find({
+            $or: [
+                { sellerId: req.userId },
+                { buyerId: req.userId }
+            ]
+        }).sort({ updatedAt: -1 });
+
+        const finalConversations = await Promise.all(
+            conversations.map(async (conv) => {
+                let buyerName = "Unknown";
+                let sellerName = "Unknown";
+
+                if (mongoose.Types.ObjectId.isValid(conv.buyerId)) {
+                    const buyer = await User.findById(conv.buyerId);
+                    if (buyer) buyerName = buyer.username;
+                }
+
+                if (mongoose.Types.ObjectId.isValid(conv.sellerId)) {
+                    const seller = await User.findById(conv.sellerId);
+                    if (seller) sellerName = seller.username;
+                }
+
+                return {
+                    ...conv._doc,
+                    buyerName,
+                    sellerName,
+                };
+            })
+        );
+
+        res.status(200).json(finalConversations);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json("Failed to fetch conversations");
+    }
 };

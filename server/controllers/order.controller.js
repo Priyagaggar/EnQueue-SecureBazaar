@@ -1,80 +1,85 @@
-import createError from "../utils/createError.js";
+import mongoose from "mongoose";
 import Order from "../models/order.model.js";
 import Gig from "../models/gig.model.js";
-import Stripe from "stripe";
+import User from "../models/user.model.js";
 
-export const intent = async (req, res, next) => {
-  const stripe = new Stripe(process.env.STRIPE);
+export const createOrder = async (req, res, next) => {
+    try {
+        const gig = await Gig.findById(req.params.gigId);
 
-  const gig = await Gig.findById(req.params.id);
+        if (!gig) return res.status(404).send("Gig not found");
 
-  const customerName = req.body.name || "Test User";
-  const customerAddress = req.body.address || {
-    line1: "123 Main Street",
-    city: "Mumbai",
-    state: "MH",
-    postal_code: "400001",
-    country: "IN",
-  };
+        if (gig.userId === req.userId) {
+            return res.status(403).send("You cannot order your own gig");
+        }
 
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: gig.price,
-    currency: 'usd',
-    description: `Order for gig: ${gig.title} by seller ${gig.userId} for buyer ${req.userId}`,
-    automatic_payment_methods: {
-      enabled: true,
-    },
-    shipping: {
-      name: customerName,
-      address: customerAddress,
-    },
-  });
+        const newOrder = new Order({
+            gigId: gig._id,
+            img: gig.cover,
+            title: gig.title,
+            price: gig.price,
+            sellerId: gig.userId,
+            buyerId: req.userId,
+            isCompleted: false,
+            payment_intent: "local_test",
+            status: "pending",
+        });
 
-  const newOrder = new Order({
-    gigId: gig._id,
-    img: gig.cover,
-    title: gig.title,
-    buyerId: req.userId,
-    sellerId: gig.userId,
-    price: gig.price,
-    payment_intent: paymentIntent.id,
-  });
-
-  await newOrder.save();
-
-  res.status(200).send({
-    clientSecret: paymentIntent.client_secret,
-  });
+        await newOrder.save();
+        return res.status(201).send(newOrder);
+    } catch (err) {
+        next(err);
+    }
 };
 
-export const getOrders = async (req, res, next) => {
-  try {
-    const orders = await Order.find({
-      ...(req.isSeller ? { sellerId: req.userId } : { buyerId: req.userId }),
-      isCompleted: true,
-    });
+export const getOrders = async (req, res) => {
+    try {
+        const orders = await Order.find(
+            req.isSeller ? { sellerId: req.userId } : { buyerId: req.userId }
+        );
 
-    res.status(200).send(orders);
-  } catch (err) {
-    next(err);
-  }
+        const finalOrders = await Promise.all(
+            orders.map(async (order) => {
+                let buyerName = "Unknown";
+                let sellerName = "Unknown";
+
+                if (mongoose.Types.ObjectId.isValid(order.buyerId)) {
+                    const buyer = await User.findById(order.buyerId);
+                    if (buyer) buyerName = buyer.username;
+                }
+
+                if (mongoose.Types.ObjectId.isValid(order.sellerId)) {
+                    const seller = await User.findById(order.sellerId);
+                    if (seller) sellerName = seller.username;
+                }
+
+                return {
+                    ...order._doc,
+                    buyerName,
+                    sellerName,
+                };
+            })
+        );
+
+        res.status(200).send(finalOrders);
+    } catch (err) {
+        res.status(500).send("Order fetch failed");
+    }
 };
-export const confirm = async (req, res, next) => {
-  try {
-    const orders = await Order.findOneAndUpdate(
-      {
-        payment_intent: req.body.payment_intent,
-      },
-      {
-        $set: {
-          isCompleted: true,
-          new: true,
-        },
-      }
-    );
 
-    res.status(200).send("Order has been confirmed.");
-  } catch (err) {
-    next(err);
-  }
+// ✅ CORRECT POSITION - outside all functions
+export const updateOrderStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+
+        const order = await Order.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true }
+        );
+
+        res.status(200).send(order);
+    } catch (err) {
+        res.status(500).json(err);
+    }
 };

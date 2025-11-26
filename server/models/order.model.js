@@ -31,7 +31,13 @@ const OrderSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    payment_intent: {
+      status: {
+          type: String,
+          enum: ["pending", "accepted", "completed", "rejected"],
+          default: "pending",
+      },
+
+      payment_intent: {
       type: String,
       required: true,
     },

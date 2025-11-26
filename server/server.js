@@ -1,6 +1,8 @@
+import dotenv from "dotenv";
+dotenv.config({ path: "./.env" });
+console.log("Loaded MONGO =", process.env.MONGO);
 import express from "express";
 import mongoose from "mongoose";
-import dotenv from "dotenv";
 import userRoute from "./routes/user.route.js";
 import gigRoute from "./routes/gig.route.js";
 import orderRoute from "./routes/order.route.js";
@@ -12,7 +14,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 
 const app = express();
-dotenv.config();
+console.log("Loaded MONGO =", process.env.MONGO);
 
 const connectDB = async () => {
   try {
@@ -25,9 +27,13 @@ const connectDB = async () => {
 
 //middlewares
 app.use(cors({
-  origin: 'https://codelance-akshat.netlify.app',
-  credentials: true
+    origin: [
+        "http://localhost:3000",
+        "https://codelance-akshat.netlify.app"
+    ],
+    credentials: true
 }));
+
 // app.use(cors({
 //   origin: 'http://localhost:3000',
 //   credentials: true
@@ -51,7 +57,7 @@ app.use((err, req, res, next) => {
   return res.status(errorStatus).send(errorMessage);
 });
 
-const PORT = process.env.PORT || 8800;
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   connectDB();
